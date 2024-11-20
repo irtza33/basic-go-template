@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/irtza33/basic-go-template/interface/controller"
 )
 
 const port = ":8080"
@@ -17,6 +18,7 @@ type GinRouter struct {
 
 func initRouter() *gin.Engine {
 	router := gin.Default()
+	router.GET(Health, controller.Health())
 	return router
 }
 
