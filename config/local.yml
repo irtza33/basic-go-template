@@ -1,0 +1,6 @@
+---
+profile: local
+user: root
+password: password
+host: localhost
+db: db
