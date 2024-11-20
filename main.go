@@ -3,9 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
-
-	"github.com/irtza33/basic-go-template/infrastructure"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"errors"
 	"github.com/irtza33/basic-go-template/config/DB"
+	"github.com/irtza33/basic-go-template/infrastructure/database"
+	"github.com/irtza33/basic-go-template/infrastructure/router"
 )
 
 func main() {
@@ -16,25 +21,30 @@ func main() {
 		panic(err)
 	}
 
-	_, err = infrastructure.NewSqlClient(context.Background(), dbConfig.Username, dbConfig.Password, dbConfig.Host, dbConfig.Db)
+	sqlClient, err := database.NewSqlClient(context.Background(), dbConfig.Username, dbConfig.Password, dbConfig.Host, dbConfig.Db)
 	if err != nil {
 		panic(err)
 	}
+	defer sqlClient.Conn.Close(context.Background())
 
 	fmt.Println("Database successfully connected")
+
+	router := router.NewGinRouter()
+
+	go func() {
+		fmt.Println("Server is now listening...")
+		if err := router.Server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			panic(err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+
+	<-quit
+
+	if err := router.Shutdown(); err != nil {
+		panic(err.Error())
+	}
+
 }
-
-// func getAllUsers(conn *pgx.Conn) ([]User, error) {
-// 	rows, err := conn.Query(context.Background(), "SELECT * FROM users")
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	defer rows.Close()
-// 	for rows.Next() {
-// 		err := rows.Scan()
-// 		if err != nil {
-// 			fmt.Println(err)
-// 		}
-// 	}
-// }
