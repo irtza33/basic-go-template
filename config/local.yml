@@ -1,6 +1,6 @@
 ---
 profile: local
-user: root
+username: user
 password: password
-host: localhost
-db: db
+host: localhost:5432
+db: database
